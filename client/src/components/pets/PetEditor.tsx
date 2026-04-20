@@ -21,9 +21,7 @@ interface IPetEditorState {
 };
 
 export default class PetEditor extends React.Component<IPetEditorProps, IPetEditorState> {
-
   context: IRouterContext;
-
   static contextTypes = {
     router: React.PropTypes.object.isRequired
   };
@@ -33,60 +31,64 @@ export default class PetEditor extends React.Component<IPetEditorProps, IPetEdit
     this.onInputChange = this.onInputChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
 
-    this.state = { editablePet: Object.assign({}, props.pet ) };
+    this.state = { editablePet: Object.assign({}, props.pet) };
   }
 
   onSubmit(event) {
     event.preventDefault();
-
-    const { owner } = this.props;
+    const { owner, pettypes } = this.props;
     const { editablePet } = this.state;
 
-    const request: IPetRequest = {
+    // Search for the selected type using the 'type' field
+    const selectedPetType = editablePet.type ? pettypes.find(pt => String(pt.value) === String(editablePet.type)) : null;
+
+    const request = {
       birthDate: editablePet.birthDate,
       name: editablePet.name,
-      typeId: editablePet.typeId
+      type: selectedPetType ? { id: Number(selectedPetType.value), name: selectedPetType.name } : null
     };
 
-    const url = editablePet.isNew ? '/api/owners/' + owner.id + '/pets' :  '/api/owners/' + owner.id + '/pets/' + editablePet.id;
+    const url = editablePet.isNew ? '/api/owners/' + owner.id + '/pets' : '/api/owners/' + owner.id + '/pets/' + editablePet.id;
     submitForm(editablePet.isNew ? 'POST' : 'PUT', url, request, (status, response) => {
-      if (status === 204) {
-        this.context.router.push({
-          pathname: '/owners/' + owner.id
-        });
+      if (status === 200 || status === 201 || status === 204) {
+        this.context.router.push({ pathname: '/owners/' + owner.id });
       } else {
-        console.log('ERROR?!...', response);
         this.setState({ error: response });
       }
     });
   }
 
-  onInputChange(name: string, value: string) {
-    const { editablePet } = this.state;
+  onInputChange(name: string, value: string, fieldError: IFieldError) {
+    const { editablePet, error } = this.state;
     const modifiedPet = Object.assign({}, editablePet, { [name]: value });
+    
+    // Clear the error for this specific field when the user interacts with it
+    const newFieldErrors = error ? Object.assign({}, error.fieldErrors, {[name]: fieldError }) : {[name]: fieldError };
 
-    this.setState({ editablePet: modifiedPet });
+    this.setState({ 
+      editablePet: modifiedPet,
+      error: { fieldErrors: newFieldErrors }
+    });
   }
 
   render() {
     const { owner, pettypes } = this.props;
     const { editablePet, error } = this.state;
-
     const formLabel = editablePet.isNew ? 'Add Pet' : 'Update Pet';
 
     return (
       <span>
         <h2>{formLabel}</h2>
-        <form className='form-horizontal' method='POST' action={url('/api/owner')}>
+        <form className='form-horizontal' method='POST' action={url('/api/owners')}>
           <div className='form-group has-feedback'>
             <div className='form-group'>
               <label className='col-sm-2 control-label'>Owner</label>
               <div className='col-sm-10'>{owner.firstName} {owner.lastName}</div>
             </div>
-
             <Input object={editablePet} error={error} label='Name' name='name' onChange={this.onInputChange} />
             <DateInput object={editablePet} error={error} label='Birth date' name='birthDate' onChange={this.onInputChange} />
-            <SelectInput object={editablePet} error={error} label='Type' name='typeId' options={pettypes} onChange={this.onInputChange} />
+            {/* Changed name from 'typeId' to 'type' */}
+            <SelectInput object={editablePet} error={error} label='Type' name='type' options={pettypes} onChange={this.onInputChange} />
           </div>
           <div className='form-group'>
             <div className='col-sm-offset-2 col-sm-10'>

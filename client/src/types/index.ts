@@ -69,10 +69,9 @@ export interface IPet extends INamedEntity {
   visits: IVisit[];
 };
 
-// TODO
 export interface IEditablePet extends INamedEntity {
   birthDate?: string;
-  typeId?: IPetTypeId;
+  type?: string | number; // Changed from typeId
 }
 
 export interface IPetRequest {

@@ -62,15 +62,19 @@ public class ExceptionControllerAdvice {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(code = BAD_REQUEST)
     @ResponseBody
-    public ResponseEntity<Void> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, WebRequest request) {
-        BindingErrorsResponse errors = new BindingErrorsResponse();
-        BindingResult bindingResult = ex.getBindingResult();
-        HttpHeaders headers = new HttpHeaders();
-        if (bindingResult.hasErrors()) {
-            errors.addAllErrors(bindingResult);
-            headers.add("errors", errors.toJSON());
+    public ResponseEntity<java.util.Map<String, Object>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, WebRequest request) {
+        java.util.Map<String, Object> responseBody = new java.util.HashMap<>();
+        java.util.Map<String, java.util.Map<String, String>> fieldErrors = new java.util.HashMap<>();
+
+        for (org.springframework.validation.FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
+            java.util.Map<String, String> errorDetail = new java.util.HashMap<>();
+            errorDetail.put("field", fieldError.getField());
+            errorDetail.put("message", fieldError.getDefaultMessage());
+            fieldErrors.put(fieldError.getField(), errorDetail);
         }
-        return new ResponseEntity<>(headers, HttpStatus.BAD_REQUEST);
+
+        responseBody.put("fieldErrors", fieldErrors);
+        return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
     }
 
     private class ErrorInfo {

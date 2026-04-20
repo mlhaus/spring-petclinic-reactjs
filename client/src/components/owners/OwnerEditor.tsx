@@ -43,10 +43,11 @@ export default class OwnerEditor extends React.Component<IOwnerEditorProps, IOwn
 
     const url = owner.isNew ? '/api/owners' : '/api/owners/' + owner.id;
     submitForm(owner.isNew ? 'POST' : 'PUT', url, owner, (status, response) => {
-      if (status === 200 || status === 201) {
+      if (status === 200 || status === 201 || status === 204) {
         const newOwner = response as IOwner;
+        const targetId = newOwner.id || owner.id;
         this.context.router.push({
-          pathname: '/owners/' + newOwner.id
+          pathname: '/owners/' + targetId
         });
       } else {
         console.log('ERROR?!...', response);
