@@ -31,7 +31,16 @@ export default class PetEditor extends React.Component<IPetEditorProps, IPetEdit
     this.onInputChange = this.onInputChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
 
-    this.state = { editablePet: Object.assign({}, props.pet) };
+    const pet = props.pet || {};
+    
+    this.state = {
+      editablePet: {
+        ...pet,
+        // Map the nested backend type object to the flat 'type' field the form uses
+        type: pet.type ? pet.type.id : ''
+      },
+      error: undefined
+    };
   }
 
   onSubmit(event) {

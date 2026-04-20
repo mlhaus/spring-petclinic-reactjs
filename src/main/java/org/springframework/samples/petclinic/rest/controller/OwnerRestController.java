@@ -170,16 +170,38 @@ public class OwnerRestController implements OwnersApi {
     public ResponseEntity<PetDto> getOwnersPet(Integer ownerId, Integer petId) {
         Owner owner = this.clinicService.findOwnerById(ownerId);
         Pet pet = this.clinicService.findPetById(petId);
+
         if (owner == null || pet == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } else {
-            System.out.println("Owner: " + owner);
-            System.out.println("Pet: " + pet);
-            if (!pet.getOwner().equals(owner)) {
+            // Compare the primary key IDs (Integers) instead of object instances
+            if (!pet.getOwner().getId().equals(owner.getId())) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             } else {
                 return new ResponseEntity<>(petMapper.toPetDto(pet), HttpStatus.OK);
             }
         }
+    }
+
+    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
+    @Override
+    public ResponseEntity<PetDto> updateOwnersPet(Integer ownerId, Integer petId, PetFieldsDto petFieldsDto) {
+        // 1. Retrieve the existing pet from the database
+        Pet currentPet = this.clinicService.findPetById(petId);
+        
+        // 2. Security/Validation check: Ensure pet exists and belongs to the specified owner
+        if (currentPet == null || !currentPet.getOwner().getId().equals(ownerId)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        // 3. Use the mapper to update the entity with the new fields from the DTO
+        // Note: Most PetClinic mappers have a method to update an existing entity
+        this.petMapper.updatePet(currentPet, petFieldsDto);
+
+        // 4. Save the updated entity
+        this.clinicService.savePet(currentPet);
+
+        // 5. Return 204 No Content (Standard for PUT updates)
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
