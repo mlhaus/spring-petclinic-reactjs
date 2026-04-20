@@ -173,6 +173,8 @@ public class OwnerRestController implements OwnersApi {
         if (owner == null || pet == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } else {
+            System.out.println("Owner: " + owner);
+            System.out.println("Pet: " + pet);
             if (!pet.getOwner().equals(owner)) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             } else {

@@ -17,6 +17,7 @@ package org.springframework.samples.petclinic.model;
 
 import org.springframework.beans.support.MutableSortDefinition;
 import org.springframework.beans.support.PropertyComparator;
+import org.springframework.core.style.ToStringCreator;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import jakarta.persistence.*;
@@ -97,6 +98,17 @@ public class Pet extends NamedEntity {
     public void addVisit(Visit visit) {
         getVisitsInternal().add(visit);
         visit.setPet(this);
+    }
+
+    public String toString() {
+        return new ToStringCreator(this)
+            .append("id", this.getId())
+            .append("new", this.isNew())
+            .append("name", this.getName())
+            .append("birthDate", this.birthDate)
+            .append("type", this.type)
+            .append("owner", this.owner)
+            .toString();
     }
 
 }
